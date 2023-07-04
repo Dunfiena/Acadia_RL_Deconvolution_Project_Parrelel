@@ -5,19 +5,20 @@ import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 
+
 def generate_1D_psf(sigma, pixels, output, psf_gen):
-    Xval = []
+    xval = []
     min = 1
     max = pixels
     Xo = pixels / 2
 
     while min <= max:
-        Xval.append(min)
+        xval.append(min)
         min += 1
 
     psf = []
     psfimg = []
-    for X in Xval:
+    for X in xval:
         results = ((1 / (math.sqrt(2 * math.pi * sigma))) *
                    (math.pow(math.e, -(math.pow((X - Xo), 2) / (2 * math.pow(sigma, 2))))))
         psf.append(results)
