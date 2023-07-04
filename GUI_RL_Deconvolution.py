@@ -4,7 +4,7 @@ from Generate_PSF import *
 from PyQt5 import QtCore
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QComboBox, QFileDialog, \
-    QSpinBox, QCheckBox, QGroupBox, QWidget
+    QSpinBox, QCheckBox, QGroupBox, QWidget, QTabWidget, QVBoxLayout
 
 
 class MainWindow(QMainWindow):
@@ -74,6 +74,7 @@ class MainWindow(QMainWindow):
         self.itera_sel = None
         self.pixels_sel = None
         self.image_label = None
+        self.layout = QVBoxLayout(self)
         self.title = "Richardson Lucy Deconvolution"
         self.left = 50
         self.top = 50
@@ -89,125 +90,151 @@ class MainWindow(QMainWindow):
         self.init_out()
 
     def initUI(self):
+        self.tabs = QTabWidget(self)
+        self.tab1 = QWidget(self)
+        self.tab2 = QWidget(self)
+        self.tabs.resize(300, 200)
+
+        # Add tabs
+        self.tabs.addTab(self.tab1, "Input")
+        self.tabs.addTab(self.tab2, "Output")
+
         self.setWindowTitle(self.title)
         self.setWindowIcon(QIcon("./Assets/projecticon2.png"))
 
+        self.tab1.layout = QVBoxLayout(self)
         top_group = QGroupBox(self)
-        top_group.move(25, 10)
+        top_group.move(25, 60)
         top_group.setFixedSize(700, 165)
 
         Decon_type = QLabel('Deconvolution type:', self)
         Decon_type.setFixedSize(300, 50)
-        Decon_type.move(50, 25)
+        Decon_type.move(50, 75)
 
         self.type_box = QComboBox(self)
         self.type_box.addItem("1D Deconvolution")
         self.type_box.addItem("2D Deconvolution")
         self.type_box.setFixedSize(300, 50)
-        self.type_box.move(400, 30)
+        self.type_box.move(400, 80)
 
         file_sel = QLabel('Select File:', self)
         file_sel.setFixedSize(300, 50)
-        file_sel.move(50, 100)
+        file_sel.move(50, 150)
 
         search = QPushButton('Search', self)
         search.setFixedSize(300, 50)
-        search.move(400, 100)
+        search.move(400, 150)
         search.clicked.connect(self.get_file)
 
         righttop_group = QGroupBox(self)
-        righttop_group.move(725, 250)
+        righttop_group.move(725, 300)
         righttop_group.setFixedSize(450, 250)
 
         logo_img = QLabel(self)
-        logo_img.move(750, 10)
+        logo_img.move(750, 60)
         logo_map = QPixmap('./Assets/logo.png')
         logo_resize = logo_map.scaled(425, 400, QtCore.Qt.KeepAspectRatio)
         logo_img.setPixmap(logo_resize)
         logo_img.adjustSize()
 
         Logo = QLabel('Image Deconvolution', self)
-        Logo.move(775, 100)
+        Logo.move(775, 150)
         Logo.setFixedSize(400, 100)
         Logo.setStyleSheet('color: white;font-size: 20pt;')
 
         preview = QLabel('Image Preview:', self)
-        preview.move(50, 200)
+        preview.move(50, 250)
         preview.setFixedSize(300, 50)
         self.image_label = QLabel(self)
-        self.image_label.move(50, 250)
+        self.image_label.move(50, 300)
 
         Decon_label = QLabel('Deconvolution settings:', self)
-        Decon_label.move(750, 200)
+        Decon_label.move(750, 250)
         Decon_label.setFixedSize(350, 50)
 
         sigma = QLabel('Sigma:', self)
-        sigma.move(750, 275)
+        sigma.move(750, 325)
         sigma.setFixedSize(150, 50)
 
         pixels = QLabel('Pixels:', self)
-        pixels.move(750, 350)
+        pixels.move(750, 400)
         pixels.setFixedSize(150, 50)
 
         itera = QLabel('Iterations:', self)
-        itera.move(750, 425)
+        itera.move(750, 475)
         itera.setFixedSize(150, 50)
 
         self.sigma_sel = QSpinBox(self)
-        self.sigma_sel.move(1000, 275)
+        self.sigma_sel.move(1000, 325)
         self.sigma_sel.setFixedSize(150, 50)
         self.sigma_sel.setMaximum(9999)
         self.sigma_sel.setValue(10)
 
         self.pixels_sel = QSpinBox(self)
-        self.pixels_sel.move(1000, 350)
+        self.pixels_sel.move(1000, 400)
         self.pixels_sel.setFixedSize(150, 50)
         self.pixels_sel.setMaximum(9999)
         self.pixels_sel.setValue(100)
 
         self.itera_sel = QSpinBox(self)
-        self.itera_sel.move(1000, 425)
+        self.itera_sel.move(1000, 475)
         self.itera_sel.setFixedSize(150, 50)
         self.itera_sel.setMaximum(9999)
         self.itera_sel.setValue(50)
 
         rightbottom_group = QGroupBox(self)
-        rightbottom_group.move(725, 575)
+        rightbottom_group.move(725, 625)
         rightbottom_group.setFixedSize(450, 250)
 
         Output_settings = QLabel("Output Settings:", self)
-        Output_settings.move(750, 525)
+        Output_settings.move(750, 575)
         Output_settings.setFixedSize(400, 50)
 
         output_dir = QPushButton("Output Directory", self)
-        output_dir.move(750, 600)
+        output_dir.move(750, 650)
         output_dir.setFixedSize(400, 50)
         output_dir.clicked.connect(self.set_output)
 
         self.mult = QCheckBox('Generate Image for each Iteration', self)
-        self.mult.move(750, 650)
+        self.mult.move(750, 700)
         self.mult.setFixedSize(400, 50)
         self.mult.setChecked(True)
 
         self.psf_gen = QCheckBox('Generate PSF Image', self)
-        self.psf_gen.move(750, 700)
+        self.psf_gen.move(750, 750)
         self.psf_gen.setFixedSize(400, 50)
         self.psf_gen.setChecked(True)
 
         self.label = QCheckBox('Label Image with iteration value', self)
-        self.label.move(750, 750)
+        self.label.move(750, 800)
         self.label.setFixedSize(400, 50)
         self.label.setChecked(True)
 
         run = QPushButton('Run Deconvolution', self)
         run.setFixedSize(300, 100)
-        run.move(200, 750)
+        run.move(200, 800)
         run.clicked.connect(self.start_deconvolution)
 
         bottom_text = QLabel("Acadia Physics 2023", self)
         bottom_text.setFixedSize(200, 25)
-        bottom_text.move(1050, 870)
+        bottom_text.move(1050, 875)
         bottom_text.setStyleSheet('font-size: 8pt;')
+
+        self.tab1.layout.addWidget(bottom_text)
+        self.tab1.layout.addWidget(file_sel)
+        self.tab1.layout.addWidget(itera)
+        self.tab1.layout.addWidget(logo_img)
+        self.tab1.layout.addWidget(output_dir)
+        self.tab1.layout.addWidget(preview)
+        self.tab1.layout.addWidget(run)
+        self.tab1.layout.addWidget(righttop_group)
+        self.tab1.layout.addWidget(rightbottom_group)
+        self.tab1.layout.addWidget(sigma)
+        self.tab1.layout.addWidget(top_group)
+
+
+
+
 
         self.show()
 
@@ -269,9 +296,7 @@ class MainWindow(QMainWindow):
             window.set_sigma(sigma2)
             window.set_itera(itera2)
             window.set_pixels(pixels2)
-            self.hide()
             if run_type == "1D Deconvolution":
-                self.show_output()
                 psf = generate_1D_psf(window.get_sigma(), window.get_pixels(),
                                       window.get_output_path(), window.get_psf_gen())
                 RL_1D_Deconvolve(window.get_itera(), window.get_sigma(), window.get_pixels(),
@@ -279,7 +304,6 @@ class MainWindow(QMainWindow):
                                  window.get_mult_img(), window.get_label_state())
 
             elif run_type == "2D Deconvolution":
-                self.show_output()
                 psf = generate_2D_psf(window.get_sigma(), window.get_pixels(),
                                       window.get_output_path(), window.get_psf_gen())
                 RL_2D_deconvolve(window.get_itera(), window.get_sigma(), window.get_pixels(),
@@ -293,12 +317,12 @@ class MainWindow(QMainWindow):
         self.title = "Richardson Lucy Deconvolution output"
         self.setWindowIcon(QIcon("./Assets/projecticon2.png"))
 
-        logo_img = QLabel(self)
-        logo_img.move(800, 10)
-        logo_map = QPixmap('./Assets/logo.png')
-        logo_resize = logo_map.scaled(300, 200, QtCore.Qt.KeepAspectRatio)
-        logo_img.setPixmap(logo_resize)
-        logo_img.adjustSize()
+        logo_img_out = QLabel(self)
+        logo_img_out.move(800, 10)
+        logo_map_out = QPixmap('./Assets/logo.png')
+        logo_resize_out = logo_map_out.scaled(300, 200, QtCore.Qt.KeepAspectRatio)
+        logo_img_out.setPixmap(logo_resize_out)
+        logo_img_out.adjustSize()
 
         Logo = QLabel('Image Deconvolution', self)
         Logo.move(800, 100)
