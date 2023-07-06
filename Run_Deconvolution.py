@@ -1,5 +1,4 @@
 import os
-import shutil
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
 from matplotlib import image as mpimg
@@ -69,7 +68,7 @@ def RL_2D_deconvolve(iterations, sigma, pixels, file, psf, output_path, mult_img
         print("Iteration with RL{} completed\nRun toke {} seconds".format(iterations, end - start))
 
 
-def RL_1D_Deconvolve(iterations, sigma, pixels, file, psf, output, mult_img, label):
+def RL_1D_Deconvolve(iterations, sigma, pixels, file, psf, output_path, mult_img, label):
     # Spectra input file format as (199.89	8.00) for multiple lines
     f = open('{}'.format(file), 'r')
     start = time.time()
@@ -99,7 +98,7 @@ def RL_1D_Deconvolve(iterations, sigma, pixels, file, psf, output, mult_img, lab
             plt.xticks(xaxis)
             name = os.path.basename(os.path.normpath(file)) + " " + "pixel" + str(pixels) + "RL" + str(x) + \
                 "sig" + str(sigma) + ".tif"
-            plt.savefig('{}/{}'.format(output, name))
+            plt.savefig('{}/{}'.format(output_path, name))
             end = time.time()
             print("Iteration with RL{} completed\nRun toke {} seconds".format(x, end - start))
 
@@ -115,7 +114,7 @@ def RL_1D_Deconvolve(iterations, sigma, pixels, file, psf, output, mult_img, lab
         tmp = name
         if os.path.isfile(tmp):
             os.remove(tmp)
-        plt.savefig('{}/{}'.format(output, name))
+        plt.savefig('{}/{}'.format(output_path, name))
         end = time.time()
         print("Iteration with RL{} completed\nRun toke {} seconds".format(iterations, end - start))
 
