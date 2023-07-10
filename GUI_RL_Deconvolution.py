@@ -5,8 +5,8 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QComboBox, QFileDialog, \
-    QSpinBox, QCheckBox, QGroupBox, QWidget, QTabWidget, QVBoxLayout, QGridLayout, QToolButton
-
+    QSpinBox, QCheckBox, QGroupBox, QWidget, QTabWidget, QVBoxLayout, QGridLayout, QToolButton, QProgressBar
+import Run_Deconvolution
 
 class MainWindow(QMainWindow):
     def set_sigma(self, x):
@@ -57,8 +57,31 @@ class MainWindow(QMainWindow):
     def get_psf_gen(self):
         return self._psf_gen
 
+    def set_img_index(self, x):
+        i = 0
+        if window.get_mult_img():
+            while i < x:
+                self._img_index.append(i)
+                i += 1
+        else:
+            self._img_index.append(x)
+
+    def get_img_index(self, x):
+        try:
+            return self._img_index[x]
+        except IndexError:
+            return self._img_index
+
+    def set_index_position(self, x):
+        self._index_position = x
+
+    def get_index_position(self):
+        return self._index_position
+
     def __init__(self):
         super().__init__()
+        self._index_position = 0
+        self._img_index = []
         self.img_arr = []
         self.set_output = None
         self._psf_gen = None
@@ -66,9 +89,9 @@ class MainWindow(QMainWindow):
         self._mult_img = None
         self._output_path = None
         self._filename = None
-        self._pixels = None
-        self._itera = None
-        self._sigma = None
+        self._pixels = 0
+        self._itera = 0
+        self._sigma = 0
         self.title = "Richardson Lucy Deconvolution"
         self.setWindowIcon(QIcon("Assets/project_icon_2.png"))
         self.left = 0
@@ -91,20 +114,26 @@ class MainWindow(QMainWindow):
 
 
 class create_window(QWidget):
+
     def __init__(self, parent):
         super(QWidget, self).__init__(parent)
+        self._progress = None
         self.layout = QVBoxLayout(self)
 
         # Initialize tab screen
         self.tabs = QTabWidget()
         self.tab1 = QWidget()
         self.tab2 = QWidget()
+        self.tab3 = QWidget()
         self.tabs.resize(1200, 900)
 
         self.tabs.addTab(self.tab1, "Input")
         self.tabs.addTab(self.tab2, "Output")
+        self.tabs.addTab(self.tab3, "Advanced Settings")
+
         self.tab1.layout = QGridLayout(self)
 
+        # region tab1
         top_group = QGroupBox(self)
 
         decon_type = QLabel('Deconvolution type:', self)
@@ -215,9 +244,11 @@ class create_window(QWidget):
 
         self.tab1.layout.addWidget(run, 62, 16, 8, 24)
         self.tab1.layout.addWidget(bottom_text, 66, 90, 2, 6)
+        # endregion
 
-        # Output Tab QWidgets
+        # region tab2
         self.tab2.layout = QGridLayout(self)
+        self.filelist = []
 
         logo_img_out = QLabel(self)
         logo_map_out = QPixmap('./Assets/logo.png')
@@ -241,24 +272,53 @@ class create_window(QWidget):
         right_arrow.setFixedSize(100, 100)
         right_arrow.clicked.connect(self.Img_right)
 
-        out_img = QLabel()
-
-        self.tab2.layout.addWidget(space, 0, 0, 72, 1)  # left side
-        self.tab2.layout.addWidget(space, 0, 0, 1, 96)  # top
+        self.out_img = QLabel()
+        space2 = QLabel()
+        self.tab2.layout.addWidget(space2, 0, 0, 72, 1)  # left side
+        self.tab2.layout.addWidget(space2, 0, 0, 1, 96)  # top
         self.tab2.layout.addWidget(logo_img_out, 1, 80, 8, 16)
         self.tab2.layout.addWidget(logo_out, 5, 81, 4, 16)
         self.tab2.layout.addWidget(iter_num, 12, 85, 4, 16)
         self.tab2.layout.addWidget(left_arrow, 15, 80, 4, 16)
         self.tab2.layout.addWidget(right_arrow, 15, 92, 4, 16)
 
+        # endregion
+
+        # region Advanced Settings
+        self.tab3.layout = QGridLayout(self)
+        logo_img_adv = QLabel(self)
+        logo_map_adv = QPixmap('./Assets/logo.png')
+        logo_resize_adv = logo_map_adv.scaled(450, 400, QtCore.Qt.KeepAspectRatio)
+        logo_img_adv.setPixmap(logo_resize_adv)
+        logo_img_adv.adjustSize()
+
+        logo_adv = QLabel('Image Deconvolution', self)
+        logo_adv.setFixedSize(450, 75)
+        logo_adv.setStyleSheet('color: white;font-size: 20pt;')
+
+        group1 = QGroupBox('PSF Settings')
+
+        space3 = QLabel()
+
+        self.tab3.layout.addWidget(space3, 0, 0, 72, 1)  # left side
+        self.tab3.layout.addWidget(space3, 0, 0, 1, 96)  # top
+        self.tab3.layout.addWidget(logo_img_adv, 1, 80, 8, 16)
+        self.tab3.layout.addWidget(logo_adv, 5, 81, 4, 16)
+
+        self.tab3.layout.addWidget(group1, 1, 1, 4, 16)
+
+        # endregion
+
         self.layout.addWidget(self.tabs)
         self.setLayout(self.layout)
         self.tab1.setLayout(self.tab1.layout)
         self.tab2.setLayout(self.tab2.layout)
+        self.tab3.setLayout(self.tab3.layout)
 
     def set_output(self):
         output_path = QFileDialog().getExistingDirectory(self, None, "Select Folder")
-        window.set_output_path(output_path)
+        if output_path:
+            window.set_output_path(output_path)
 
     def start_deconvolution(self):
         mult_state = self.mult.isChecked()
@@ -280,12 +340,24 @@ class create_window(QWidget):
             window.set_sigma(sigma2)
             window.set_itera(itera2)
             window.set_pixels(pixels2)
+            i = 0
+            self.filelist = []
+            self.tabs.setCurrentIndex(1)
+            while window.get_itera() < i:
+                filename = window.get_output_path()
+                name = os.path.basename(filename + " " + "pixel" + str(window.get_pixels())) + \
+                       "RL" + str(window.get_itera()) + "sig" + str(window.get_sigma()) + ".tif"
+                self.filelist.append(name)
+                i += 1
+
             if run_type == "1D Deconvolution":
                 psf = generate_1D_psf(window.get_sigma(), window.get_pixels(),
                                       window.get_output_path(), window.get_psf_gen())
                 RL_1D_Deconvolve(window.get_itera(), window.get_sigma(), window.get_pixels(),
                                  window.get_filename(), psf, window.get_output_path(),
                                  window.get_mult_img(), window.get_label_state())
+                window.set_img_index(window.get_itera())
+                window.set_index_position(0)
 
             elif run_type == "2D Deconvolution":
                 psf = generate_2D_psf(window.get_sigma(), window.get_pixels(),
@@ -293,7 +365,9 @@ class create_window(QWidget):
                 RL_2D_deconvolve(window.get_itera(), window.get_sigma(), window.get_pixels(),
                                  window.get_filename(), psf, window.get_output_path(),
                                  window.get_mult_img(), window.get_label_state())
-                print(window.img_arr)
+                window.set_img_index(window.get_itera())
+                window.set_index_position(0)
+
         else:
             print("No file Selected")
 
@@ -340,10 +414,20 @@ class create_window(QWidget):
                 self.image_label.adjustSize()
 
     def Img_left(self):
-        img_num = 0
+        x = window.get_index_position()
+        if window.get_itera() > 0:
+            x -= 1
+            window.set_index_position(x)
+        print(window.get_img_index(window.get_index_position()))
 
     def Img_right(self):
-        img_num = 0
+        print(window.get_img_index(2))
+        x = window.get_index_position()
+        if window.get_itera() > 0:
+            if x < window.get_itera():
+                x += 1
+                window.set_index_position(x)
+            print(window.get_img_index(window.get_index_position()))
 
 
 if __name__ == '__main__':
