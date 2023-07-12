@@ -1,11 +1,11 @@
-import sys
 from Run_Deconvolution import *
 from Generate_PSF import *
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QComboBox, QFileDialog, \
-    QSpinBox, QCheckBox, QGroupBox, QWidget, QTabWidget, QVBoxLayout, QGridLayout, QToolButton, QProgressBar, QLineEdit
+    QSpinBox, QCheckBox, QGroupBox, QWidget, QTabWidget, QVBoxLayout, QGridLayout, QToolButton, QProgressBar, QLineEdit, \
+    QPlainTextEdit
 
 
 class MainWindow(QMainWindow):
@@ -107,6 +107,7 @@ class MainWindow(QMainWindow):
                           'QCheckBox{font-size: 12pt;}'
                           'QGroupBox{border: 2px solid gray;border-radius: 5px;background: rgb(211, 218, 235);}'
                           'Selection-color: grey;')
+
         self.tabs_window = create_window(self)
         self.setCentralWidget(self.tabs_window)
 
@@ -278,7 +279,10 @@ class create_window(QWidget):
 
         self.out_img = QLabel()
 
-        self.feed = QLineEdit()
+        self.feed = QPlainTextEdit()
+        self.feed.setFixedSize(600, 300)
+        self.feed.setReadOnly(True)
+        self.feed.setStyleSheet("font-size: 12pt")
 
         space2 = QLabel()
         self.tab2.layout.addWidget(space2, 0, 0, 72, 1)  # left side
@@ -291,7 +295,7 @@ class create_window(QWidget):
         self.tab2.layout.addWidget(right_arrow, 15, 92, 4, 16)
         self.tab2.layout.addWidget(self.pbar, 42, 5, 6, 64)
         self.tab2.layout.addWidget(self.out_img, 1, 1, 32, 32)
-        self.tab2.layout.addWidget(self.feed, 50, 50, 32, 32)
+        self.tab2.layout.addWidget(self.feed, 25, 72, 32, 32)
 
         # endregion
 
@@ -345,7 +349,7 @@ class create_window(QWidget):
                 window.set_output_path(".")
             run_type = self.type_box.currentText()
 
-            print(run_type)
+            self.feed.appendPlainText("{}".format(run_type))
             sigma2 = self.sigma_sel.value()
             itera2 = self.itera_sel.value()
             pixels2 = self.pixels_sel.value()
@@ -363,7 +367,7 @@ class create_window(QWidget):
                 i += 1
 
             if run_type == "1D Deconvolution":
-                self.feed.setText("Running {} RL".format(window.get_itera()))
+                self.feed.appendPlainText("Running {} RL".format(window.get_itera()))
                 psf = generate_1D_psf(window.get_sigma(), window.get_pixels(),
                                       window.get_output_path(), window.get_psf_gen())
                 self.iter_value.setText(str(window.get_itera()))
@@ -377,7 +381,7 @@ class create_window(QWidget):
                         min += 1
                     for x in itera:
                         start = time.time()
-                        self.feed.setText("Running {} RL".format(x))
+                        self.feed.appendPlainText("Running {} RL".format(x))
                         RL_1D_Deconvolve(x, window.get_sigma(), window.get_pixels(),
                                          window.get_filename(), psf, window.get_output_path(),
                                          window.get_mult_img(), window.get_label_state())
@@ -385,10 +389,10 @@ class create_window(QWidget):
                         self.iter_value.setText(str(x))
                         self.create_img(window.get_filename(), x)
                         end = time.time()
-                        self.feed.setText("Iteration with RL{} completed\nRun toke {} seconds".format(x, end - start))
+                        self.feed.appendPlainText("Iteration with RL{} completed\nRun toke {} seconds".format(x, end - start))
 
                 elif not window.get_mult_img():
-                    self.feed.setText("Running {} RL".format(window.get_itera()))
+                    self.feed.appendPlainText("Running {} RL".format(window.get_itera()))
                     RL_1D_Deconvolve(window.get_itera(), window.get_sigma(), window.get_pixels(),
                                      window.get_filename(), psf, window.get_output_path(),
                                      window.get_mult_img(), window.get_label_state())
@@ -411,7 +415,7 @@ class create_window(QWidget):
                         min += 1
                     for x in itera:
                         start = time.time()
-                        self.feed.setText("Running {} RL".format(x))
+                        self.feed.appendPlainText("Running {} RL".format(x))
                         RL_2D_deconvolve(x, window.get_sigma(), window.get_pixels(),
                                          window.get_filename(), psf, window.get_output_path(),
                                          window.get_label_state())
@@ -419,10 +423,10 @@ class create_window(QWidget):
                         self.iter_value.setText("{}".format(x))
                         self.create_img(window.get_filename(), x)
                         end = time.time()
-                        self.feed.setText("Iteration with RL{} completed\nRun toke {} seconds".format(x, end - start))
+                        self.feed.appendPlainText("Iteration with RL{} completed\nRun toke {} seconds".format(x, end - start))
 
                 elif not window.get_mult_img():
-                    self.feed.setText("Running {} RL".format(window.get_itera()))
+                    self.feed.appendPlainText("Running {} RL".format(window.get_itera()))
                     RL_2D_deconvolve(window.get_itera(), window.get_sigma(), window.get_pixels(),
                                      window.get_filename(), psf, window.get_output_path(),
                                      window.get_label_state())
