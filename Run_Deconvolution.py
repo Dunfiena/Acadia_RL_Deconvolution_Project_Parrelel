@@ -1,16 +1,48 @@
 import os
 import sys
-from multiprocessing import Pool
+import cv2
 import matplotlib.pyplot as plt
 from matplotlib import image as mpimg
 from skimage import color, restoration
-import time
 import numpy as np
 import File_Attributes as fa
 
 
+def RL_Color_Deconvolution(iterations, sigma, pixels, file, psf, output_path, label):
+    plt.clf()
+    # Image input and setup
+    print(output_path)
+    blurred_img = os.path.basename(os.path.normpath(file))
+    print(blurred_img)
+    img_input = file
+    img = cv2.imread(file)
+    blue = img[:, :, 0]
+    green = img[:, :, 1]
+    red = img[:, :, 2]
+    size = fa.size(img_input)
+    w = (size[0]) / 100
+    h = (size[1]) / 100
+
+    print("Original Image Dimension is\nHeight = {} pixels\nWidth = {} pixels"
+          .format(size[0], size[1]))
+
+    print('red')
+    im_red = restoration.richardson_lucy(red, psf, num_iter=iterations, clip=False)
+    print('blue')
+    im_blue = restoration.richardson_lucy(blue, psf, num_iter=iterations, clip=False)
+    print('green')
+    im_green = restoration.richardson_lucy(green, psf, num_iter=iterations, clip=False)
+
+    name = os.path.basename(os.path.normpath(file)) + " " + "pixel" + str(pixels) + "RL" + str(iterations) + \
+        "sig" + str(sigma) + ".png"
+    im_dec = cv2.merge([im_blue, im_green, im_red])
+    im_dec = np.array(im_dec)
+    im_deca = im_dec.astype(int)
+    cv2.imwrite('{}/{}'.format(output_path, name), im_deca)
+
+
 def RL_2D_deconvolve(iterations, sigma, pixels, file, psf, output_path, label):
-    multproc = main_function
+    plt.clf()
     # Image input and setup
     print(output_path)
     blurred_img = os.path.basename(os.path.normpath(file))
@@ -29,17 +61,17 @@ def RL_2D_deconvolve(iterations, sigma, pixels, file, psf, output_path, label):
     # Create image output
     plt.gray()
     name = os.path.basename(os.path.normpath(file)) + " " + "pixel" + str(pixels) + "RL" + str(iterations) + \
-           "sig" + str(sigma) + ".tif"
+           "sig" + str(sigma) + ".png"
     plt.figure(figsize=(w, h), dpi=100)
     plt.axis('off')
     if label:
         plt.xlabel("{} Iterations Richardson Lucy".format(iterations))
     plt.imshow(deconvolved_RL)
     plt.savefig('{}/{}'.format(output_path, name), dpi=100)
-    plt.close()
 
 
 def RL_1D_Deconvolve(iterations, sigma, pixels, file, psf, output_path, mult_img, label):
+    plt.clf()
     # Spectra input file format as (199.89	8.00) for multiple lines
     f = open('{}'.format(file), 'r')
     spectra = []
@@ -53,61 +85,16 @@ def RL_1D_Deconvolve(iterations, sigma, pixels, file, psf, output_path, mult_img
     print(spectra)
     f.close()
 
-    deconvolved_RL = restoration.richardson_lucy(spectra, psf, num_iter=iterations)
-
-    plt.plot(xaxis, deconvolved_RL)
+    deconvolved_RL = restoration.richardson_lucy(spectra, psf, num_iter=iterations, clip=False)
+    plt.plot(deconvolved_RL)
     if label:
         plt.xlabel("{} Iterations Richardson Lucy".format(iterations))
 
     name = os.path.basename(os.path.normpath(file)) + " " + "pixel" + str(pixels) + "RL" + str(iterations) + \
-        "sig" + str(sigma) + ".tif"
+           "sig" + str(sigma) + ".png"
+    i = 0
+    with open('{}/{}.txt'.format(output_path, name), 'w') as f:
+        for _ in xaxis:
+            f.write('{}   {}\n'.format(xaxis[i], deconvolved_RL[i]))
+            i = i + 1
     plt.savefig('{}/{}'.format(output_path, name))
-
-
-class main_function:
-    def get_label(self):
-        return self.label
-
-    def get_sigma(self):
-        return self.sigma
-
-    def get_output_path(self):
-        return self.output_path
-
-    def get_psf(self):
-        return self.psf
-
-    def get_file(self):
-        return self.file
-
-    def get_pixels(self):
-        return self.pixels
-
-    def get_interations(self):
-        return self.iterations
-
-    def __init__(self):
-        self.label = None
-        self.output_path = None
-        self.psf = None
-        self.file = None
-        self.pixels = None
-        self.sigma = None
-        self.iterations = None
-
-    def call_run(self, iterations, sigma, pixels, file, psf, output_path, label):
-        s = time.time()
-        self.iterations = iterations
-        self.sigma = sigma
-        self.pixels = pixels
-        self.file = file
-        self.psf = psf
-        self.output_path = output_path
-        self.label = label
-
-        with Pool(8) as p:
-            min_iter = 1
-            max_iter = 5
-            print(p.map(RL_2D_deconvolve, range(min_iter, max_iter)))
-        e = time.time()
-        print("Runtime was {}".format((e - s)))
