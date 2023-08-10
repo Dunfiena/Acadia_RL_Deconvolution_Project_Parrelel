@@ -32,6 +32,8 @@ HOW IT WORKS
   This represents 1 point in the point spread function, this calculation with be run an equal amount of times as pixels
   you have selected for the run.  Sigma is the same as selected for the run, X is the iteration number (from 1 to total
   number of runs), and Xo is equal to pixels/2.
+
+(1D PSF)
 ![1D PSF sigma 10](https://github.com/Dunfiena/Acadia_RL_Deconvolution_Project/assets/117761149/bb18de7f-4547-40b5-a02b-f643ce027af5)
 
 
@@ -42,7 +44,8 @@ HOW IT WORKS
   results = ((1 / (2 * math.pi * math.pow(sigma, 2))) *
                        (math.pow(math.e, -(math.pow((X - Xo), 2) / (2 * math.pow(sigma, 2))))) *
                        (math.pow(math.e, -(math.pow((Y - Yo), 2) / (2 * math.pow(sigma, 2))))))
-                       
+
+(2D PSF)
 <img width="221" alt="2D psf sigma 10" src="https://github.com/Dunfiena/Acadia_RL_Deconvolution_Project/assets/117761149/b155c12d-33b8-42f5-bbbf-ec19172a3362">
 
 
@@ -55,6 +58,14 @@ Deconvolution
   It uses an array that is input, the psf and the number of iterations to Deconvolve the image.  1D takes like to no time,
   but be careful with the 2D deconvlution, running high numbers of iterations can take quite a while; especially with the
   color deconvolution white runs 3 times per iteration (for each color)
+
+(Original image)
+<img width="578" alt="Original pine" src="https://github.com/Dunfiena/Acadia_RL_Deconvolution_Project/assets/117761149/709610b6-188f-413a-9e45-dbc634147357">
+
+(None optimized Deconvolution)
+![pine tif pixel100RL25sig8 0](https://github.com/Dunfiena/Acadia_RL_Deconvolution_Project/assets/117761149/3de4b974-708e-4670-a15f-a5af8e74ba3c)
+
+
 
 
   
