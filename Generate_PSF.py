@@ -26,7 +26,7 @@ def generate_1D_psf(sigma, pixels, output, psf_gen):
         psfimg.append(total)
     if psf_gen:
         plt.plot(psfimg)
-        name = "psf" + str(sigma) + ".tif"
+        name = "psf" + str(sigma) + ".png"
         tmp = name
         if os.path.isfile(tmp):
             os.remove(tmp)
@@ -62,7 +62,7 @@ def generate_2D_psf(sigma, pixels, output, psf_gen):
         psf = np.reshape(psf, (pixels, pixels))
         data = Image.fromarray(array)
         plt.imshow(data)
-        name = "psf" + str(sigma) + ".tif"
+        name = "psf" + str(sigma) + ".png"
         tmp = name
         if os.path.isfile(tmp):
             os.remove(tmp)

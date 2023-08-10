@@ -72,7 +72,6 @@ def RL_2D_deconvolve(iterations, sigma, pixels, file, psf, output_path, label):
 
 def RL_1D_Deconvolve(iterations, sigma, pixels, file, psf, output_path, mult_img, label):
     plt.clf()
-    # Spectra input file format as (199.89	8.00) for multiple lines
     f = open('{}'.format(file), 'r')
     spectra = []
     xaxis = []
