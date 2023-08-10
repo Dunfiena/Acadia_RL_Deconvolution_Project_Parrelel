@@ -42,6 +42,7 @@ HOW IT WORKS
   results = ((1 / (2 * math.pi * math.pow(sigma, 2))) *
                        (math.pow(math.e, -(math.pow((X - Xo), 2) / (2 * math.pow(sigma, 2))))) *
                        (math.pow(math.e, -(math.pow((Y - Yo), 2) / (2 * math.pow(sigma, 2))))))
+                       
 <img width="221" alt="2D psf sigma 10" src="https://github.com/Dunfiena/Acadia_RL_Deconvolution_Project/assets/117761149/b155c12d-33b8-42f5-bbbf-ec19172a3362">
 
 
