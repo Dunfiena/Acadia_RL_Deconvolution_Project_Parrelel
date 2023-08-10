@@ -34,6 +34,7 @@ HOW IT WORKS
   number of runs), and Xo is equal to pixels/2.
 
 (1D PSF)
+
 ![1D PSF sigma 10](https://github.com/Dunfiena/Acadia_RL_Deconvolution_Project/assets/117761149/bb18de7f-4547-40b5-a02b-f643ce027af5)
 
 
@@ -46,6 +47,7 @@ HOW IT WORKS
                        (math.pow(math.e, -(math.pow((Y - Yo), 2) / (2 * math.pow(sigma, 2))))))
 
 (2D PSF)
+
 <img width="221" alt="2D psf sigma 10" src="https://github.com/Dunfiena/Acadia_RL_Deconvolution_Project/assets/117761149/b155c12d-33b8-42f5-bbbf-ec19172a3362">
 
 
