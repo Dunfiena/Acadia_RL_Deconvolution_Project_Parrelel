@@ -59,13 +59,5 @@ Deconvolution
   but be careful with the 2D deconvlution, running high numbers of iterations can take quite a while; especially with the
   color deconvolution white runs 3 times per iteration (for each color)
 
-(Original image)
-<img width="578" alt="Original pine" src="https://github.com/Dunfiena/Acadia_RL_Deconvolution_Project/assets/117761149/709610b6-188f-413a-9e45-dbc634147357">
-
-(None optimized Deconvolution)
-![pine tif pixel100RL25sig8 0](https://github.com/Dunfiena/Acadia_RL_Deconvolution_Project/assets/117761149/3de4b974-708e-4670-a15f-a5af8e74ba3c)
-
-
-
 
   
