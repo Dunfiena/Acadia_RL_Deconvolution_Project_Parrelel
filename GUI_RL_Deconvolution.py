@@ -7,7 +7,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QComboBox, QFileDialog, \
     QSpinBox, QCheckBox, QGroupBox, QWidget, QTabWidget, QVBoxLayout, QGridLayout, QToolButton, QProgressBar, \
-    QPlainTextEdit, QDoubleSpinBox
+    QPlainTextEdit, QDoubleSpinBox, QLineEdit
 
 
 class MainWindow(QMainWindow):
@@ -80,8 +80,15 @@ class MainWindow(QMainWindow):
     def get_index_position(self):
         return self._index_position
 
+    def set_out_file_name(self, x):
+        self._out_file_name = x
+
+    def get_out_file_name(self):
+        return self._out_file_name
+
     def __init__(self):
         super().__init__()
+        self._out_file_name = None
         self._index_position = 0
         self._img_index = []
         self.img_arr = []
@@ -152,6 +159,12 @@ class create_window(QWidget):
         search.clicked.connect(self.input_file)
         search.setFixedSize(300, 50)
 
+        file_name = QLabel("File Name:")
+
+        self.file_name_entry = QLineEdit()
+        self.file_name_entry.setFixedSize(500, 50)
+        self.file_name_entry.setStyleSheet('font-size: 16pt;')
+
         right_top_group = QGroupBox(self)
 
         logo_img = QLabel(self)
@@ -220,11 +233,13 @@ class create_window(QWidget):
 
         self.tab1.layout.addWidget(top_group, 1, 1, 8, 76)
 
-        self.tab1.layout.addWidget(decon_type, 2, 4, 2, 24)
-        self.tab1.layout.addWidget(self.type_box, 2, 36, 2, 24)
+        self.tab1.layout.addWidget(decon_type, 1, 4, 2, 24)
+        self.tab1.layout.addWidget(self.type_box, 1, 36, 2, 24)
 
-        self.tab1.layout.addWidget(file_sel, 5, 4, 2, 32)
-        self.tab1.layout.addWidget(search, 5, 36, 2, 24)
+        self.tab1.layout.addWidget(file_sel, 4, 4, 2, 32)
+        self.tab1.layout.addWidget(search, 4, 36, 2, 24)
+        self.tab1.layout.addWidget(file_name, 7, 4, 2, 32)
+        self.tab1.layout.addWidget(self.file_name_entry, 7, 36, 2, 24)
 
         self.tab1.layout.addWidget(logo_img, 1, 80, 8, 16)
         self.tab1.layout.addWidget(logo, 5, 81, 4, 16)
@@ -320,6 +335,12 @@ class create_window(QWidget):
         window.set_label_state(label_state)
         gen_psf = self.psf_gen.isChecked()
         window.set_psf_gen(gen_psf)
+        if self.file_name_entry.text() == '':
+            file_name = window.get_filename()
+        else:
+            file_name = self.file_name_entry.text()
+
+        window.set_out_file_name(file_name)
 
         if window.get_filename():
             if window.get_output_path() is None:
@@ -338,8 +359,11 @@ class create_window(QWidget):
             self.pbar.setRange(0, itera2)
             while window.get_itera() < i:
                 filename = window.get_output_path()
-                name = os.path.basename(filename + " " + "pixel" + str(window.get_pixels())) + \
-                    "RL" + str(window.get_itera()) + "sig" + str(window.get_sigma()) + ".png"
+                if window.get_out_file_name():
+                    name = window.get_out_file_name()
+                else:
+                    name = os.path.basename(filename + " " + "pixel" + str(window.get_pixels())) + \
+                           "RL" + str(window.get_itera()) + "sig" + str(window.get_sigma()) + ".png"
                 self.filelist.append(name)
                 i += 1
 
@@ -348,8 +372,7 @@ class create_window(QWidget):
                 psf = generate_1D_psf(window.get_sigma(), window.get_pixels(),
                                       window.get_output_path(), window.get_psf_gen())
                 self.iter_value.setText(str(window.get_itera()))
-                self.create_img(window.get_filename(), window.get_itera())
-
+                
                 if window.get_mult_img():
                     itera = []
                     min = 1
@@ -361,10 +384,10 @@ class create_window(QWidget):
                         self.feed.appendPlainText("Running {} RL".format(x))
                         RL_1D_Deconvolve(x, window.get_sigma(), window.get_pixels(),
                                          window.get_filename(), psf, window.get_output_path(),
-                                         window.get_mult_img(), window.get_label_state())
+                                         window.get_mult_img(), window.get_label_state(), window.get_out_file_name())
                         self.pbar.setValue(x)
                         self.iter_value.setText(str(x))
-                        self.create_img(window.get_filename(), x)
+                        self.create_img(window.get_out_file_name(), x)
                         end = time.time()
                         self.feed.appendPlainText("Iteration with RL{} completed\nRun took "
                                                   "{} seconds".format(x, end - start))
@@ -373,13 +396,12 @@ class create_window(QWidget):
                     self.feed.appendPlainText("Running {} RL".format(window.get_itera()))
                     RL_1D_Deconvolve(window.get_itera(), window.get_sigma(), window.get_pixels(),
                                      window.get_filename(), psf, window.get_output_path(),
-                                     window.get_mult_img(), window.get_label_state())
+                                     window.get_mult_img(), window.get_label_state(), window.get_out_file_name())
                     self.iter_value.setText("{}".format(window.get_itera()))
-                    self.create_img(window.get_filename(), window.get_itera())
+                    self.create_img(window.get_out_file_name(), window.get_itera())
 
                 window.set_img_index(window.get_itera())
                 window.set_index_position(itera2)
-                self.create_img(window.get_filename(), window.get_itera())
 
             elif run_type == "2D Deconvolution (Grey)":
                 psf = generate_2D_psf(window.get_sigma(), window.get_pixels(),
@@ -396,10 +418,10 @@ class create_window(QWidget):
                         self.feed.appendPlainText("Running {} RL".format(x))
                         RL_2D_deconvolve(x, window.get_sigma(), window.get_pixels(),
                                          window.get_filename(), psf, window.get_output_path(),
-                                         window.get_label_state())
+                                         window.get_label_state(), window.get_out_file_name(), window.get_mult_img())
                         self.pbar.setValue(x)
                         self.iter_value.setText("{}".format(x))
-                        self.create_img(window.get_filename(), x)
+                        self.create_img(window.get_out_file_name(), x)
                         end = time.time()
                         self.feed.appendPlainText("Iteration with RL{} completed\n"
                                                   "Run took {} seconds".format(x, end - start))
@@ -408,9 +430,9 @@ class create_window(QWidget):
                     self.feed.appendPlainText("Running {} RL".format(window.get_itera()))
                     RL_2D_deconvolve(window.get_itera(), window.get_sigma(), window.get_pixels(),
                                      window.get_filename(), psf, window.get_output_path(),
-                                     window.get_label_state())
+                                     window.get_label_state(), window.get_out_file_name(), window.get_mult_img())
                     self.iter_value.setText("{}".format(window.get_itera()))
-                    self.create_img(window.get_filename(), window.get_itera())
+                    self.create_img(window.get_out_file_name(), window.get_itera())
 
             elif run_type == "2D Deconvolution (Color)":
                 psf = generate_2D_psf(window.get_sigma(), window.get_pixels(),
@@ -427,10 +449,11 @@ class create_window(QWidget):
                         self.feed.appendPlainText("Running {} RL".format(x))
                         RL_Color_Deconvolution(x, window.get_sigma(), window.get_pixels(),
                                                window.get_filename(), psf, window.get_output_path(),
-                                               window.get_label_state())
+                                               window.get_label_state(), window.get_out_file_name(),
+                                               window.get_mult_img())
                         self.pbar.setValue(x)
                         self.iter_value.setText("{}".format(x))
-                        self.create_img(window.get_filename(), x)
+                        self.create_img(window.get_out_file_name(), x)
                         end = time.time()
                         self.feed.appendPlainText(
                             "Iteration with RL{} completed\nRun took {} seconds".format(x, end - start))
@@ -439,14 +462,12 @@ class create_window(QWidget):
                     self.feed.appendPlainText("Running {} RL".format(window.get_itera()))
                     RL_Color_Deconvolution(window.get_itera(), window.get_sigma(), window.get_pixels(),
                                            window.get_filename(), psf, window.get_output_path(),
-                                           window.get_label_state())
+                                           window.get_label_state(), window.get_out_file_name(), window.get_mult_img())
                     self.iter_value.setText("{}".format(window.get_itera()))
-                    self.create_img(window.get_filename(), window.get_itera())
+                    self.create_img(window.get_out_file_name(), window.get_itera())
 
             window.set_img_index(window.get_itera())
             window.set_index_position(itera2)
-            self.create_img(window.get_filename(), window.get_itera())
-            self.image_label.clear()
         else:
             print("No file Selected")
         plt.clf()
@@ -501,7 +522,7 @@ class create_window(QWidget):
                 x -= 1
                 window.set_index_position(x)
                 self.iter_value.setText("{}".format(x))
-                self.create_img(window.get_filename(), window.get_index_position())
+                self.create_img(window.get_out_file_name(), window.get_index_position())
 
     def Img_right(self):
         x = window.get_index_position()
@@ -510,18 +531,26 @@ class create_window(QWidget):
                 x += 1
                 window.set_index_position(x)
                 self.iter_value.setText("{}".format(x))
-                self.create_img(window.get_filename(), window.get_index_position())
+                self.create_img(window.get_out_file_name(), window.get_index_position())
 
     def create_img(self, file, iterations):
         sigma2 = self.sigma_sel.value()
         pixels2 = self.pixels_sel.value()
-        name = window.get_output_path() + "/" + os.path.basename(os.path.normpath(file)) + " " + \
-            "pixel" + str(pixels2) + "RL" + str(iterations) + "sig" + str(sigma2) + ".png"
-
+        print(file)
+        if self.file_name_entry.text() == '':
+            print("a")
+            name = window.get_output_path() + "/" + os.path.basename(os.path.normpath(file)) + " " + \
+                   "pixel" + str(pixels2) + "RL" + str(iterations) + "sig" + str(sigma2) + ".png"
+        else:
+            name = window.get_output_path() + "/" + file
+            if window.get_mult_img():
+                name = window.get_output_path() + "/" + file + "({})".format(iterations)
+        print("b")
         pixmap = QPixmap(name)
         pixmap_resized = pixmap.scaled(650, 650, QtCore.Qt.KeepAspectRatio)
         self.out_img.setPixmap(pixmap_resized)
         self.out_img.adjustSize()
+        print("c")
 
 
 if __name__ == '__main__':
