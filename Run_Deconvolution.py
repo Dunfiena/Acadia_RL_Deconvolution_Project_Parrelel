@@ -43,7 +43,6 @@ def RL_Color_Deconvolution(iterations, sigma, pixels, file, psf, output_path, la
     im_dec = cv2.merge([im_blue, im_green, im_red])
     im_dec = np.array(im_dec)
     im_deca = im_dec.astype(int)
-    print("1")
     cv2.imwrite('{}/{}'.format(output_path, name), im_deca)
 
 
@@ -94,8 +93,10 @@ def RL_1D_Deconvolve(iterations, sigma, pixels, file, psf, output_path, mult_img
     spectra = np.array(spectra, dtype=np.float32)
     print(spectra)
     f.close()
-
+    print("a")
+    print(psf)
     deconvolved_RL = restoration.richardson_lucy(spectra, psf, num_iter=iterations, clip=False)
+    print("c")
     plt.plot(deconvolved_RL)
     if label:
         plt.xlabel("{} Iterations Richardson Lucy".format(iterations))
@@ -107,6 +108,8 @@ def RL_1D_Deconvolve(iterations, sigma, pixels, file, psf, output_path, mult_img
         name = os.path.basename(os.path.normpath(file)) + " " + "pixel" + str(pixels) + "RL" + str(iterations) + \
              "sig" + str(sigma) + ".png"
     i = 0
+    print("a")
+
     with open('{}/{}.txt'.format(output_path, name), 'w') as f:
         for _ in xaxis:
             f.write('{}   {}\n'.format(xaxis[i], deconvolved_RL[i]))

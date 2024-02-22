@@ -1,5 +1,7 @@
 import time
+import threading
 
+import function_handler
 from Run_Deconvolution import *
 from Generate_PSF import *
 from PyQt5 import QtCore
@@ -368,103 +370,52 @@ class create_window(QWidget):
                 i += 1
 
             if run_type == "1D Deconvolution":
-                self.feed.appendPlainText("Running {} RL".format(window.get_itera()))
-                psf = generate_1D_psf(window.get_sigma(), window.get_pixels(),
-                                      window.get_output_path(), window.get_psf_gen())
-                self.iter_value.setText(str(window.get_itera()))
-                
-                if window.get_mult_img():
-                    itera = []
-                    min = 1
-                    while min <= window.get_itera():
-                        itera.append(min)
-                        min += 1
-                    for x in itera:
-                        start = time.time()
-                        self.feed.appendPlainText("Running {} RL".format(x))
-                        RL_1D_Deconvolve(x, window.get_sigma(), window.get_pixels(),
-                                         window.get_filename(), psf, window.get_output_path(),
-                                         window.get_mult_img(), window.get_label_state(), window.get_out_file_name())
-                        self.pbar.setValue(x)
-                        self.iter_value.setText(str(x))
-                        self.create_img(window.get_out_file_name(), x)
-                        end = time.time()
-                        self.feed.appendPlainText("Iteration with RL{} completed\nRun took "
-                                                  "{} seconds".format(x, end - start))
+                function_handler.decon_1D(window.get_mult_img(), window.get_itera(), window.get_sigma(),
+                                          window.get_pixels(), window.get_filename(), window.get_output_path(),
+                                          window.get_label_state(), window.get_out_file_name())
 
-                elif not window.get_mult_img():
-                    self.feed.appendPlainText("Running {} RL".format(window.get_itera()))
-                    RL_1D_Deconvolve(window.get_itera(), window.get_sigma(), window.get_pixels(),
-                                     window.get_filename(), psf, window.get_output_path(),
-                                     window.get_mult_img(), window.get_label_state(), window.get_out_file_name())
-                    self.iter_value.setText("{}".format(window.get_itera()))
-                    self.create_img(window.get_out_file_name(), window.get_itera())
+                # self.iter_value.setText(str(window.get_itera()))
+                # self.feed.appendPlainText("Running {} RL".format(window.get_itera()))
 
-                window.set_img_index(window.get_itera())
-                window.set_index_position(itera2)
+                # self.feed.appendPlainText("Running {} RL".format(x))
+                # self.pbar.setValue(x)
+                # self.iter_value.setText(str(x))
+                # self.create_img(window.get_out_file_name(), x)
+                # end = time.time()
+                # self.feed.appendPlainText("Iteration with RL{} completed\nRun took "
+                #                            "{} seconds".format(x, end - start))
+                #
+                # elif not window.get_mult_img():
+                #     self.feed.appendPlainText("Running {} RL".format(window.get_itera()))
+                #
+                #     self.iter_value.setText("{}".format(window.get_itera()))
+                #     self.create_img(window.get_out_file_name(), window.get_itera())
+                #
+                # window.set_img_index(window.get_itera())
+                # window.set_index_position(itera2)
 
             elif run_type == "2D Deconvolution (Grey)":
-                psf = generate_2D_psf(window.get_sigma(), window.get_pixels(),
-                                      window.get_output_path(), window.get_psf_gen())
-                print("multi_image = {}".format(window.get_mult_img()))
-                if window.get_mult_img():
-                    itera = []
-                    min = 1
-                    while min <= window.get_itera():
-                        itera.append(min)
-                        min += 1
-                    for x in itera:
-                        start = time.time()
-                        self.feed.appendPlainText("Running {} RL".format(x))
-                        RL_2D_deconvolve(x, window.get_sigma(), window.get_pixels(),
-                                         window.get_filename(), psf, window.get_output_path(),
-                                         window.get_label_state(), window.get_out_file_name(), window.get_mult_img())
-                        self.pbar.setValue(x)
-                        self.iter_value.setText("{}".format(x))
-                        self.create_img(window.get_out_file_name(), x)
-                        end = time.time()
-                        self.feed.appendPlainText("Iteration with RL{} completed\n"
-                                                  "Run took {} seconds".format(x, end - start))
+                function_handler.decon_2D_gray(window.get_psf_gen(), window.get_mult_img(), window.get_itera(),
+                                                window.get_sigma(), window.get_pixels(), window.get_filename(),
+                                                window.get_output_path(), window.get_label_state(),
+                                                window.get_out_file_name())
 
-                elif not window.get_mult_img():
-                    self.feed.appendPlainText("Running {} RL".format(window.get_itera()))
-                    RL_2D_deconvolve(window.get_itera(), window.get_sigma(), window.get_pixels(),
-                                     window.get_filename(), psf, window.get_output_path(),
-                                     window.get_label_state(), window.get_out_file_name(), window.get_mult_img())
-                    self.iter_value.setText("{}".format(window.get_itera()))
-                    self.create_img(window.get_out_file_name(), window.get_itera())
+                # print("multi_image = {}".format(window.get_mult_img()))
+                # start = time.time()
+                # self.feed.appendPlainText("Running {} RL".format(x))
+
+                # self.pbar.setValue(x)
+                # self.iter_value.setText("{}".format(x))
+                # self.create_img(window.get_out_file_name(), x)
+                # end = time.time()
+                # self.feed.appendPlainText("Iteration with RL{} completed\n"
+                #                           "Run took {} seconds".format(x, end - start))
 
             elif run_type == "2D Deconvolution (Color)":
-                psf = generate_2D_psf(window.get_sigma(), window.get_pixels(),
-                                      window.get_output_path(), window.get_psf_gen())
-                print("multi_image = {}".format(window.get_mult_img()))
-                if window.get_mult_img():
-                    itera = []
-                    min = 1
-                    while min <= window.get_itera():
-                        itera.append(min)
-                        min += 1
-                    for x in itera:
-                        start = time.time()
-                        self.feed.appendPlainText("Running {} RL".format(x))
-                        RL_Color_Deconvolution(x, window.get_sigma(), window.get_pixels(),
-                                               window.get_filename(), psf, window.get_output_path(),
-                                               window.get_label_state(), window.get_out_file_name(),
-                                               window.get_mult_img())
-                        self.pbar.setValue(x)
-                        self.iter_value.setText("{}".format(x))
-                        self.create_img(window.get_out_file_name(), x)
-                        end = time.time()
-                        self.feed.appendPlainText(
-                            "Iteration with RL{} completed\nRun took {} seconds".format(x, end - start))
-
-                elif not window.get_mult_img():
-                    self.feed.appendPlainText("Running {} RL".format(window.get_itera()))
-                    RL_Color_Deconvolution(window.get_itera(), window.get_sigma(), window.get_pixels(),
-                                           window.get_filename(), psf, window.get_output_path(),
-                                           window.get_label_state(), window.get_out_file_name(), window.get_mult_img())
-                    self.iter_value.setText("{}".format(window.get_itera()))
-                    self.create_img(window.get_out_file_name(), window.get_itera())
+                function_handler.decon_2D_color(window.get_psf_gen(), window.get_mult_img(), window.get_itera(),
+                                                window.get_sigma(), window.get_pixels(), window.get_filename(),
+                                                window.get_output_path(), window.get_label_state(),
+                                                window.get_out_file_name())
 
             window.set_img_index(window.get_itera())
             window.set_index_position(itera2)
@@ -498,9 +449,9 @@ class create_window(QWidget):
                 plt.savefig("./tmp.png")
                 pixmap = QPixmap("./tmp.png")
                 pixmap_resized = pixmap.scaled(650, 650, QtCore.Qt.KeepAspectRatio)
-                self.image_label.setPixmap(pixmap_resized)
-                self.image_label.adjustSize()
-                window.set_filename(image_path)
+            self.image_label.setPixmap(pixmap)
+            self.image_label.adjustSize()
+            window.set_filename(image_path)
             plt.clf()
 
         elif run_type == "2D Deconvolution (Grey)" or run_type == "2D Deconvolution (Color)":
@@ -536,21 +487,17 @@ class create_window(QWidget):
     def create_img(self, file, iterations):
         sigma2 = self.sigma_sel.value()
         pixels2 = self.pixels_sel.value()
-        print(file)
         if self.file_name_entry.text() == '':
-            print("a")
             name = window.get_output_path() + "/" + os.path.basename(os.path.normpath(file)) + " " + \
                    "pixel" + str(pixels2) + "RL" + str(iterations) + "sig" + str(sigma2) + ".png"
         else:
             name = window.get_output_path() + "/" + file
             if window.get_mult_img():
                 name = window.get_output_path() + "/" + file + "({})".format(iterations)
-        print("b")
         pixmap = QPixmap(name)
         pixmap_resized = pixmap.scaled(650, 650, QtCore.Qt.KeepAspectRatio)
         self.out_img.setPixmap(pixmap_resized)
         self.out_img.adjustSize()
-        print("c")
 
 
 if __name__ == '__main__':
