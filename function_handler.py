@@ -1,3 +1,4 @@
+import threading
 import time
 
 import Run_Deconvolution
@@ -15,7 +16,7 @@ def psfGen2D(sigma, pixel, output, psf_gen):
     return psf
 
 
-def decon_1D(psf_gen, mult, itera, sigma, pixel, filename, psf, output, label, out_name):
+def decon_1D(psf_gen, mult, itera, sigma, pixel, filename, output, label, out_name):
     psf = psfGen1D(sigma, pixel, output, psf_gen)
     if mult:
         iter = []
@@ -24,11 +25,7 @@ def decon_1D(psf_gen, mult, itera, sigma, pixel, filename, psf, output, label, o
             iter.append(min)
             min += 1
         for x in iter:
-            start = time.time()
-            print("a")
             RL_1D_Deconvolve(x, sigma, pixel, filename, psf, output, mult, label, out_name)
-            end = time.time()
-            print("ab")
 
     elif not mult:
         print("a")

@@ -1,6 +1,3 @@
-import time
-import threading
-
 import function_handler
 from Run_Deconvolution import *
 from Generate_PSF import *
@@ -9,28 +6,10 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QComboBox, QFileDialog, \
     QSpinBox, QCheckBox, QGroupBox, QWidget, QTabWidget, QVBoxLayout, QGridLayout, QToolButton, QProgressBar, \
-    QPlainTextEdit, QDoubleSpinBox, QLineEdit
+    QPlainTextEdit, QDoubleSpinBox
 
 
 class MainWindow(QMainWindow):
-    def set_sigma(self, x):
-        self._sigma = x
-
-    def get_sigma(self):
-        return self._sigma
-
-    def get_itera(self):
-        return self._itera
-
-    def set_itera(self, x):
-        self._itera = x
-
-    def get_pixels(self):
-        return self._pixels
-
-    def set_pixels(self, x):
-        self._pixels = x
-
     def set_filename(self, x):
         self._filename = x
 
@@ -42,39 +21,6 @@ class MainWindow(QMainWindow):
 
     def get_output_path(self):
         return self._output_path
-
-    def get_mult_img(self):
-        return self._mult_img
-
-    def set_mult_img(self, x):
-        self._mult_img = x
-
-    def get_label_state(self):
-        return self._label_state
-
-    def set_label_state(self, x):
-        self._label_state = x
-
-    def set_psf_gen(self, x):
-        self._psf_gen = x
-
-    def get_psf_gen(self):
-        return self._psf_gen
-
-    def set_img_index(self, x):
-        i = 0
-        if window.get_mult_img():
-            while i < x:
-                self._img_index.append(i)
-                i += 1
-        else:
-            self._img_index.append(x)
-
-    def get_img_index(self, x):
-        try:
-            return self._img_index[x]
-        except IndexError:
-            return self._img_index
 
     def set_index_position(self, x):
         self._index_position = x
@@ -92,23 +38,15 @@ class MainWindow(QMainWindow):
         super().__init__()
         self._out_file_name = None
         self._index_position = 0
-        self._img_index = []
-        self.img_arr = []
         self.set_output = None
-        self._psf_gen = None
-        self._label_state = None
-        self._mult_img = None
         self._output_path = None
         self._filename = None
-        self._pixels = 0
-        self._itera = 0
-        self._sigma = 0
         self.title = "Richardson Lucy Deconvolution"
         self.setWindowIcon(QIcon("Assets/project_icon_2.png"))
         self.left = 0
         self.top = 0
-        self.width = 1200
-        self.height = 900
+        self.width = 1400
+        self.height = 1000
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
         app.setStyleSheet('QLabel{font-size: 16pt;}'
@@ -120,14 +58,13 @@ class MainWindow(QMainWindow):
                           'QGroupBox{border: 2px solid gray;border-radius: 5px;background: rgb(211, 218, 235);}'
                           'Selection-color: grey;')
 
-        self.tabs_window = create_window(self)
+        self.tabs_window = CreateWindow(self)
         self.setCentralWidget(self.tabs_window)
 
         self.show()
 
 
-class create_window(QWidget):
-
+class CreateWindow(QWidget):
     def __init__(self, parent):
         super(QWidget, self).__init__(parent)
         self._Progress = 0
@@ -160,12 +97,6 @@ class create_window(QWidget):
         search = QPushButton('Search', self)
         search.clicked.connect(self.input_file)
         search.setFixedSize(300, 50)
-
-        file_name = QLabel("File Name:")
-
-        self.file_name_entry = QLineEdit()
-        self.file_name_entry.setFixedSize(500, 50)
-        self.file_name_entry.setStyleSheet('font-size: 16pt;')
 
         right_top_group = QGroupBox(self)
 
@@ -240,8 +171,6 @@ class create_window(QWidget):
 
         self.tab1.layout.addWidget(file_sel, 4, 4, 2, 32)
         self.tab1.layout.addWidget(search, 4, 36, 2, 24)
-        self.tab1.layout.addWidget(file_name, 7, 4, 2, 32)
-        self.tab1.layout.addWidget(self.file_name_entry, 7, 36, 2, 24)
 
         self.tab1.layout.addWidget(logo_img, 1, 80, 8, 16)
         self.tab1.layout.addWidget(logo, 5, 81, 4, 16)
@@ -287,12 +216,12 @@ class create_window(QWidget):
         left_arrow = QToolButton(self)
         left_arrow.setArrowType(Qt.LeftArrow)
         left_arrow.setFixedSize(100, 100)
-        left_arrow.clicked.connect(self.Img_left)
+        left_arrow.clicked.connect(self.img_left)
 
         right_arrow = QToolButton(self)
         right_arrow.setArrowType(Qt.RightArrow)
         right_arrow.setFixedSize(100, 100)
-        right_arrow.clicked.connect(self.Img_right)
+        right_arrow.clicked.connect(self.img_right)
 
         self.pbar = QProgressBar(self)
 
@@ -332,17 +261,8 @@ class create_window(QWidget):
         plt.clf()
         self.tabs.setCurrentIndex(1)
         mult_state = self.mult.isChecked()
-        window.set_mult_img(mult_state)
         label_state = self.label.isChecked()
-        window.set_label_state(label_state)
         gen_psf = self.psf_gen.isChecked()
-        window.set_psf_gen(gen_psf)
-        if self.file_name_entry.text() == '':
-            file_name = window.get_filename()
-        else:
-            file_name = self.file_name_entry.text()
-
-        window.set_out_file_name(file_name)
 
         if window.get_filename():
             if window.get_output_path() is None:
@@ -353,26 +273,19 @@ class create_window(QWidget):
             sigma2 = self.sigma_sel.value()
             itera2 = self.itera_sel.value()
             pixels2 = self.pixels_sel.value()
-            window.set_sigma(sigma2)
-            window.set_itera(itera2)
-            window.set_pixels(pixels2)
             i = 0
             self.filelist = []
             self.pbar.setRange(0, itera2)
-            while window.get_itera() < i:
+            while itera2 < i:
                 filename = window.get_output_path()
-                if window.get_out_file_name():
-                    name = window.get_out_file_name()
-                else:
-                    name = os.path.basename(filename + " " + "pixel" + str(window.get_pixels())) + \
-                           "RL" + str(window.get_itera()) + "sig" + str(window.get_sigma()) + ".png"
+                name = os.path.basename(filename) + " " + "pixel" + str(pixels2) + "RL" + str(itera2) + "sig" + str(
+                    sigma2) + ".png"
                 self.filelist.append(name)
                 i += 1
 
             if run_type == "1D Deconvolution":
-                function_handler.decon_1D(window.get_mult_img(), window.get_itera(), window.get_sigma(),
-                                          window.get_pixels(), window.get_filename(), window.get_output_path(),
-                                          window.get_label_state(), window.get_out_file_name())
+                function_handler.decon_1D(gen_psf, mult_state, itera2, sigma2, pixels2, window.get_filename(),
+                                          window.get_output_path(), label_state, window.get_out_file_name())
 
                 # self.iter_value.setText(str(window.get_itera()))
                 # self.feed.appendPlainText("Running {} RL".format(window.get_itera()))
@@ -395,10 +308,8 @@ class create_window(QWidget):
                 # window.set_index_position(itera2)
 
             elif run_type == "2D Deconvolution (Grey)":
-                function_handler.decon_2D_gray(window.get_psf_gen(), window.get_mult_img(), window.get_itera(),
-                                                window.get_sigma(), window.get_pixels(), window.get_filename(),
-                                                window.get_output_path(), window.get_label_state(),
-                                                window.get_out_file_name())
+                function_handler.decon_2D_gray(gen_psf, mult_state, itera2, sigma2, pixels2, window.get_filename(),
+                                               window.get_output_path(), label_state, window.get_out_file_name())
 
                 # print("multi_image = {}".format(window.get_mult_img()))
                 # start = time.time()
@@ -412,12 +323,10 @@ class create_window(QWidget):
                 #                           "Run took {} seconds".format(x, end - start))
 
             elif run_type == "2D Deconvolution (Color)":
-                function_handler.decon_2D_color(window.get_psf_gen(), window.get_mult_img(), window.get_itera(),
-                                                window.get_sigma(), window.get_pixels(), window.get_filename(),
-                                                window.get_output_path(), window.get_label_state(),
-                                                window.get_out_file_name())
+                function_handler.decon_2D_color(gen_psf, mult_state, itera2, sigma2, pixels2, window.get_filename(),
+                                                window.get_output_path(), label_state, window.get_out_file_name())
 
-            window.set_img_index(window.get_itera())
+            window.set_img_index(itera2)
             window.set_index_position(itera2)
         else:
             print("No file Selected")
@@ -466,19 +375,21 @@ class create_window(QWidget):
                 self.image_label.setPixmap(pixmap_resized)
                 self.image_label.adjustSize()
 
-    def Img_left(self):
+    def img_left(self):
+        itera2 = self.itera_sel.value()
         x = window.get_index_position()
-        if window.get_itera() > 0:
+        if itera2 > 0:
             if x > 0:
                 x -= 1
                 window.set_index_position(x)
                 self.iter_value.setText("{}".format(x))
                 self.create_img(window.get_out_file_name(), window.get_index_position())
 
-    def Img_right(self):
+    def img_right(self):
+        itera2 = self.itera_sel.value()
         x = window.get_index_position()
-        if window.get_itera() > 0:
-            if x < window.get_itera():
+        if itera2 > 0:
+            if x < itera2:
                 x += 1
                 window.set_index_position(x)
                 self.iter_value.setText("{}".format(x))
@@ -487,13 +398,9 @@ class create_window(QWidget):
     def create_img(self, file, iterations):
         sigma2 = self.sigma_sel.value()
         pixels2 = self.pixels_sel.value()
-        if self.file_name_entry.text() == '':
-            name = window.get_output_path() + "/" + os.path.basename(os.path.normpath(file)) + " " + \
-                   "pixel" + str(pixels2) + "RL" + str(iterations) + "sig" + str(sigma2) + ".png"
-        else:
-            name = window.get_output_path() + "/" + file
-            if window.get_mult_img():
-                name = window.get_output_path() + "/" + file + "({})".format(iterations)
+
+        name = window.get_output_path() + "/" + os.path.basename(os.path.normpath(file)) + " " + \
+            "pixel" + str(pixels2) + "RL" + str(iterations) + "sig" + str(sigma2) + ".png"
         pixmap = QPixmap(name)
         pixmap_resized = pixmap.scaled(650, 650, QtCore.Qt.KeepAspectRatio)
         self.out_img.setPixmap(pixmap_resized)
