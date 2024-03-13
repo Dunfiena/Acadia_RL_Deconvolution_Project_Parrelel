@@ -65,13 +65,7 @@ def RL_2D_deconvolve(iterations, sigma, pixels, file, psf, output_path, label, o
     deconvolved_RL = restoration.richardson_lucy(img_grey, psf, num_iter=iterations)
     # Create image output
     plt.gray()
-    if out_file != file:
-        name = out_file
-        if mult_img:
-            name = out_file + "({})".format(iterations)
-    else:
-        name = os.path.basename(os.path.normpath(file)) + " " + "pixel" + str(pixels) + "RL" + str(iterations) + \
-           "sig" + str(sigma) + ".png"
+    name = os.path.basename(os.path.normpath(file)) + " " + "pixel" + str(pixels) + "RL" + str(iterations) + "sig" + str(sigma) + ".png"
     plt.figure(figsize=(w, h), dpi=100)
     plt.axis('off')
     if label:

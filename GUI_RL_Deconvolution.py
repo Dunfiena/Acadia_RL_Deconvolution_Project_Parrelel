@@ -1,8 +1,10 @@
+import threading
+
 import function_handler
 from Run_Deconvolution import *
 from Generate_PSF import *
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QComboBox, QFileDialog, \
     QSpinBox, QCheckBox, QGroupBox, QWidget, QTabWidget, QVBoxLayout, QGridLayout, QToolButton, QProgressBar, \
@@ -67,6 +69,8 @@ class MainWindow(QMainWindow):
 class CreateWindow(QWidget):
     def __init__(self, parent):
         super(QWidget, self).__init__(parent)
+        self.fun = None
+        self.thread = None
         self._Progress = 0
         self.layout = QVBoxLayout(self)
 
@@ -135,10 +139,7 @@ class CreateWindow(QWidget):
         self.itera_sel.setFixedSize(150, 50)
 
         right_bottom_group = QGroupBox(self)
-        output_settings = QLabel("Output Settings:", self)
 
-        output_dir = QPushButton("Output Directory", self)
-        output_dir.clicked.connect(self.set_output)
 
         self.mult = QCheckBox('Generate Image for each Iteration', self)
         self.mult.setChecked(True)
@@ -149,9 +150,9 @@ class CreateWindow(QWidget):
         self.label = QCheckBox('Label Image with iteration value', self)
         self.label.setChecked(True)
 
-        run = QPushButton('Run Deconvolution', self)
-        run.setFixedSize(300, 100)
-        run.clicked.connect(self.start_deconvolution)
+        self.run = QPushButton('Run Deconvolution', self)
+        self.run.setFixedSize(300, 100)
+        self.run.clicked.connect(self.start_deconvolution)
 
         bottom_text = QLabel("Acadia Physics 2023", self)
 
@@ -185,13 +186,11 @@ class CreateWindow(QWidget):
         self.tab1.layout.addWidget(self.itera_sel, 28, 88, 4, 6)
 
         self.tab1.layout.addWidget(right_bottom_group, 40, 76, 24, 20)
-        self.tab1.layout.addWidget(output_settings, 36, 76, 4, 20)
-        self.tab1.layout.addWidget(output_dir, 42, 78, 4, 17)
         self.tab1.layout.addWidget(self.mult, 48, 78, 4, 18)
         self.tab1.layout.addWidget(self.psf_gen, 52, 78, 4, 18)
         self.tab1.layout.addWidget(self.label, 56, 78, 4, 18)
 
-        self.tab1.layout.addWidget(run, 56, 16, 8, 24)
+        self.tab1.layout.addWidget(self.run, 56, 16, 8, 24)
         self.tab1.layout.addWidget(bottom_text, 61, 90, 2, 6)
         # endregion
 
@@ -252,11 +251,6 @@ class CreateWindow(QWidget):
         self.tab1.setLayout(self.tab1.layout)
         self.tab2.setLayout(self.tab2.layout)
 
-    def set_output(self):
-        output_path = QFileDialog().getExistingDirectory(self, None, "Select Folder")
-        if output_path:
-            window.set_output_path(output_path)
-
     def start_deconvolution(self):
         plt.clf()
         self.tabs.setCurrentIndex(1)
@@ -266,7 +260,7 @@ class CreateWindow(QWidget):
 
         if window.get_filename():
             if window.get_output_path() is None:
-                window.set_output_path(".")
+                window.set_output_path("out")
             run_type = self.type_box.currentText()
 
             self.feed.appendPlainText("{}".format(run_type))
@@ -284,8 +278,9 @@ class CreateWindow(QWidget):
                 i += 1
 
             if run_type == "1D Deconvolution":
-                function_handler.decon_1D(gen_psf, mult_state, itera2, sigma2, pixels2, window.get_filename(),
-                                          window.get_output_path(), label_state, window.get_out_file_name())
+                fun = function_handler.function_handler
+                fun.decon_1D(gen_psf, mult_state, itera2, sigma2, pixels2, window.get_filename(),
+                             window.get_output_path(), label_state, window.get_out_file_name())
 
                 # self.iter_value.setText(str(window.get_itera()))
                 # self.feed.appendPlainText("Running {} RL".format(window.get_itera()))
@@ -308,9 +303,26 @@ class CreateWindow(QWidget):
                 # window.set_index_position(itera2)
 
             elif run_type == "2D Deconvolution (Grey)":
-                function_handler.decon_2D_gray(gen_psf, mult_state, itera2, sigma2, pixels2, window.get_filename(),
-                                               window.get_output_path(), label_state, window.get_out_file_name())
+                print("a")
+                self.thread = QThread()
+                self.fun = function_handler.function_handler()
 
+                self.fun.moveToThread(self.thread)
+                print("b")
+
+                self.thread.started.connect(self.fun.decon_2D_gray(gen_psf, mult_state, itera2, sigma2, pixels2, window.get_filename(),
+                                            window.get_output_path(), label_state, window.get_out_file_name()))
+                print("......")
+                self.fun.finished.connect(self.thread.quit)
+                self.fun.finished.connect(self.fun.deleteLater)
+                self.thread.finished.connect(self.thread.deleteLater)
+                self.worker.progress.connect(self.reportProgress)
+
+                self.thread.start()
+                self.run.setEnabled(False)
+                self.thread.finished.connect(
+                    lambda: self.run.setEnabled(True)
+                )
                 # print("multi_image = {}".format(window.get_mult_img()))
                 # start = time.time()
                 # self.feed.appendPlainText("Running {} RL".format(x))
@@ -326,11 +338,11 @@ class CreateWindow(QWidget):
                 function_handler.decon_2D_color(gen_psf, mult_state, itera2, sigma2, pixels2, window.get_filename(),
                                                 window.get_output_path(), label_state, window.get_out_file_name())
 
-            window.set_img_index(itera2)
-            window.set_index_position(itera2)
-        else:
-            print("No file Selected")
-        plt.clf()
+        #     window.set_img_index(itera2)
+        #     window.set_index_position(itera2)
+        # else:
+        #     print("No file Selected")
+        # plt.clf()
 
     def input_file(self):
         self.image_label.clear()
@@ -358,9 +370,9 @@ class CreateWindow(QWidget):
                 plt.savefig("./tmp.png")
                 pixmap = QPixmap("./tmp.png")
                 pixmap_resized = pixmap.scaled(650, 650, QtCore.Qt.KeepAspectRatio)
-            self.image_label.setPixmap(pixmap)
-            self.image_label.adjustSize()
-            window.set_filename(image_path)
+                self.image_label.setPixmap(pixmap_resized)
+                self.image_label.adjustSize()
+                window.set_filename(file_dialog[0])
             plt.clf()
 
         elif run_type == "2D Deconvolution (Grey)" or run_type == "2D Deconvolution (Color)":
@@ -369,11 +381,12 @@ class CreateWindow(QWidget):
             image_path = file_dialog[0]
             res = os.path.isfile(image_path)
             if res:
-                window.set_filename(image_path)
+                window.set_filename(file_dialog[0])
                 pixmap = QPixmap(image_path)
                 pixmap_resized = pixmap.scaled(650, 650, QtCore.Qt.KeepAspectRatio)
                 self.image_label.setPixmap(pixmap_resized)
                 self.image_label.adjustSize()
+            plt.clf()
 
     def img_left(self):
         itera2 = self.itera_sel.value()
@@ -399,8 +412,8 @@ class CreateWindow(QWidget):
         sigma2 = self.sigma_sel.value()
         pixels2 = self.pixels_sel.value()
 
-        name = window.get_output_path() + "/" + os.path.basename(os.path.normpath(file)) + " " + \
-            "pixel" + str(pixels2) + "RL" + str(iterations) + "sig" + str(sigma2) + ".png"
+        name = "out/" + os.path.basename(os.path.normpath(file)) + " " + \
+               "pixel" + str(pixels2) + "RL" + str(iterations) + "sig" + str(sigma2) + ".png"
         pixmap = QPixmap(name)
         pixmap_resized = pixmap.scaled(650, 650, QtCore.Qt.KeepAspectRatio)
         self.out_img.setPixmap(pixmap_resized)
