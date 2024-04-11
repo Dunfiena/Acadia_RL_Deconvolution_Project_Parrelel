@@ -44,7 +44,7 @@ def RL_Color_Deconvolution(iterations, sigma, pixels, file, psf, output_path, la
     im_dec = np.array(im_dec)
     im_deca = im_dec.astype(int)
     cv2.imwrite('{}/{}'.format(output_path, name), im_deca)
-
+    return name
 
 def RL_2D_deconvolve(iterations, sigma, pixels, file, psf, output_path, label, out_file, mult_img):
     plt.clf()
@@ -72,7 +72,7 @@ def RL_2D_deconvolve(iterations, sigma, pixels, file, psf, output_path, label, o
         plt.xlabel("{} Iterations Richardson Lucy".format(iterations))
     plt.imshow(deconvolved_RL)
     plt.savefig('{}/{}'.format(output_path, name), dpi=100)
-
+    return name
 
 def RL_1D_Deconvolve(iterations, sigma, pixels, file, psf, output_path, mult_img, label, out_file):
     plt.clf()
@@ -94,18 +94,14 @@ def RL_1D_Deconvolve(iterations, sigma, pixels, file, psf, output_path, mult_img
     plt.plot(deconvolved_RL)
     if label:
         plt.xlabel("{} Iterations Richardson Lucy".format(iterations))
-    if out_file != file:
-        name = out_file
-        if mult_img:
-            name = out_file + "({})".format(iterations)
-    else:
-        name = os.path.basename(os.path.normpath(file)) + " " + "pixel" + str(pixels) + "RL" + str(iterations) + \
-             "sig" + str(sigma) + ".png"
+
+    name = os.path.basename(os.path.normpath(file)) + " " + "pixel" + str(pixels) + "RL" + str(iterations) + \
+         "sig" + str(sigma) + ".png"
     i = 0
-    print("a")
 
     with open('{}/{}.txt'.format(output_path, name), 'w') as f:
         for _ in xaxis:
             f.write('{}   {}\n'.format(xaxis[i], deconvolved_RL[i]))
             i = i + 1
     plt.savefig('{}/{}'.format(output_path, name))
+    return name
