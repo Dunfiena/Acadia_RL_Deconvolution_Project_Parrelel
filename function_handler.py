@@ -3,8 +3,6 @@ import time
 from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtCore import Qt, QObject, pyqtSignal, QThread
 
-import GUI_RL_Deconvolution
-import Run_Deconvolution
 from Generate_PSF import generate_1D_psf, generate_2D_psf
 from Run_Deconvolution import RL_1D_Deconvolve, RL_2D_deconvolve, RL_Color_Deconvolution
 from feedback_DS import feedback_DS as fDS
@@ -97,3 +95,6 @@ class funcThread(QThread):
             time_taken = str(end - start)
             feedback = fDS(time_taken, itera, name)
             self.signal_1.emit(feedback)
+
+    def image(self):
+        print("1")

@@ -32,12 +32,6 @@ class MainWindow(QMainWindow):
     def get_index_position(self):
         return self._index_position
 
-    def set_out_file_name(self, x):
-        self._out_file_name = x
-
-    def get_out_file_name(self):
-        return self._out_file_name
-
     def __init__(self):
         super().__init__()
         self._out_file_name = None
@@ -262,10 +256,9 @@ class CreateWindow(QWidget):
         self.pbar.setValue(int(fDS.getNumIterations()))
         self.iter_value.setText(str(fDS.getNumIterations()))
 
-        self.create_img(fDS.getName())
+        self.create_img(fDS.getName(), fDS.getNumIterations())
         self.feed.appendPlainText("Iteration with RL{} completed\nRun took {} seconds".format(fDS.getNumIterations(), fDS.getTime()))
         print("complete")
-
 
     def start_deconvolution(self):
         plt.clf()
@@ -292,21 +285,21 @@ class CreateWindow(QWidget):
                     sigma2) + ".png"
                 self.filelist.append(name)
                 i += 1
-
+            window.set_index_position(itera2)
             if run_type == "1D Deconvolution":
                 self.feed.appendPlainText("Running {} RL".format(itera2))
                 self.worker.decon_1D(gen_psf, mult_state, itera2, sigma2, pixels2, window.get_filename(),
-                                     window.get_output_path(), label_state, window.get_out_file_name())
+                                     window.get_output_path(), label_state, window.get_filename())
 
             elif run_type == "2D Deconvolution (Grey)":
                 self.feed.appendPlainText("Running {} RL".format(itera2))
                 self.worker.decon_2D_gray(gen_psf, mult_state, itera2, sigma2, pixels2, window.get_filename(),
-                                          window.get_output_path(), label_state, window.get_out_file_name())
+                                          window.get_output_path(), label_state, window.get_filename())
 
             elif run_type == "2D Deconvolution (Color)":
                 self.feed.appendPlainText("Running {} RL".format(itera2))
                 self.worker.decon_2D_color(gen_psf, mult_state, itera2, sigma2, pixels2, window.get_filename(),
-                                           window.get_output_path(), label_state, window.get_out_file_name())
+                                           window.get_output_path(), label_state, window.get_filename())
 
         else:
             print("No file Selected")
@@ -350,6 +343,7 @@ class CreateWindow(QWidget):
             res = os.path.isfile(image_path)
             if res:
                 window.set_filename(file_dialog[0])
+                print(os.path.basename(window.get_filename()))
                 pixmap = QPixmap(image_path)
                 pixmap_resized = pixmap.scaled(650, 650, QtCore.Qt.KeepAspectRatio)
                 self.image_label.setPixmap(pixmap_resized)
@@ -364,7 +358,7 @@ class CreateWindow(QWidget):
                 x -= 1
                 window.set_index_position(x)
                 self.iter_value.setText("{}".format(x))
-                self.create_img(window.get_out_file_name(), window.get_index_position())
+                self.create_img(window.get_filename(), window.get_index_position())
 
     def img_right(self):
         itera2 = self.itera_sel.value()
@@ -374,10 +368,13 @@ class CreateWindow(QWidget):
                 x += 1
                 window.set_index_position(x)
                 self.iter_value.setText("{}".format(x))
-                self.create_img(window.get_out_file_name(), window.get_index_position())
+                self.create_img(window.get_filename(), window.get_index_position())
 
-    def create_img(self, file):
-        name = "out/" + file
+    def create_img(self, file, iterations):
+        sigma2 = self.sigma_sel.value()
+        pixels2 = self.pixels_sel.value()
+        name = "out/" + os.path.basename(window.get_filename()) + " " + "pixel" + str(pixels2) + "RL" + str(iterations) + "sig" + str(sigma2) + ".png"
+        print(name)
         pixmap = QPixmap(name)
         pixmap_resized = pixmap.scaled(650, 650, QtCore.Qt.KeepAspectRatio)
         self.out_img.setPixmap(pixmap_resized)

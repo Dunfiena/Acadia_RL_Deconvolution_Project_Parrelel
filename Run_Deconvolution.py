@@ -33,17 +33,18 @@ def RL_Color_Deconvolution(iterations, sigma, pixels, file, psf, output_path, la
     print('green')
     im_green = restoration.richardson_lucy(green, psf, num_iter=iterations, clip=False)
 
-    if out_file != file:
-        name = out_file + ".png"
-        if mult_img:
-            name = out_file + "({})".format(iterations) + ".png"
-    else:
-        name = os.path.basename(os.path.normpath(file)) + " " + "pixel" + str(pixels) + "RL" + str(iterations) +\
-            "sig" + str(sigma) + ".png"
+    name = os.path.basename(os.path.normpath(file)) + " " + "pixel" + str(pixels) + "RL" + str(
+        iterations) + "sig" + str(sigma) + ".png"
     im_dec = cv2.merge([im_blue, im_green, im_red])
     im_dec = np.array(im_dec)
     im_deca = im_dec.astype(int)
     cv2.imwrite('{}/{}'.format(output_path, name), im_deca)
+
+    # plt.figure(figsize=(w, h), dpi=100)
+    # plt.axis('off')
+    # if label:
+    #     plt.xlabel("{} Iterations Richardson Lucy".format(iterations))
+    # plt.savefig('{}/{}'.format(output_path, name), dpi=100)
     return name
 
 def RL_2D_deconvolve(iterations, sigma, pixels, file, psf, output_path, label, out_file, mult_img):
